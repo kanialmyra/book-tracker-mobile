@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:book_tracker/screens/menu.dart';
 import 'package:flutter/material.dart';
 import 'package:book_tracker/widgets/left_drawer.dart';
 
@@ -13,6 +16,8 @@ class _TrackerFormPageState extends State<TrackerFormPage> {
     String _name = "";
     int _page = 0;
     String _description = "";
+    
+      get request => null;
     @override
     Widget build(BuildContext context) {
         return Scaffold(
@@ -114,36 +119,35 @@ class _TrackerFormPageState extends State<TrackerFormPage> {
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.all(Colors.indigo),
                                     ),
-                                    onPressed: () {
+                                    onPressed: () async {
                                         if (_formKey.currentState!.validate()) {
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) {
-                                                return AlertDialog(
-                                                    title: const Text('Buku berhasil tersimpan'),
-                                                    content: SingleChildScrollView(
-                                                        child: Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment.start,
-                                                            children: [
-                                                                Text('Judul: $_name'),
-                                                                Text('Halaman: $_page'),
-                                                                Text('Deskripsi: $_description')
-                                                            ],
-                                                        ),
-                                                    ),
-                                                    actions: [
-                                                        TextButton(
-                                                            child: const Text('OK'),
-                                                            onPressed: () {
-                                                                Navigator.pop(context);
-                                                                _formKey.currentState!.reset();
-                                                            },
-                                                        ),
-                                                    ],
-                                                );
-                                            },
-                                        );
+                                          final response = await request.postJson(
+                                              "http://<URL_APP_KAMU>/create-flutter/",
+                                              jsonEncode(<String, String>{
+                                                  'name': _name,
+                                                  'page': _page.toString(),
+                                                  'description': _description,
+                                              // TODO: Sesuaikan field data sesuai dengan aplikasimu
+                                              }),
+                                          );
+                                          if (context.mounted) {
+                                              if (response['status'] == 'success') {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(const SnackBar(
+                                                  content: Text("Buku baru berhasil disimpan!"),
+                                                  ));
+                                                  Navigator.pushReplacement(
+                                                      context,
+                                                      MaterialPageRoute(builder: (context) => MyHomePage()),
+                                                  );
+                                              } else {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(const SnackBar(
+                                                      content:
+                                                          Text("Terdapat kesalahan, silakan coba lagi."),
+                                                  ));
+                                              }
+                                          }
                                         }
                                     },
                                     child: const Text(
